@@ -1,229 +1,26 @@
-import { useEffect, useState } from "react";
-import "./App.css";
-
-type Item = {
-  id: number;
-  name: string;
-  count: number;
-  min: number;
-};
-
-type Location = {
-  id: number;
-  name: string;
-  items: Item[];
-};
-
-type Area = {
-  id: number;
-  name: string;
-  emoji: string;
-  locations: Location[];
-};
-
-const initialAreas: Area[] = [
-  {
-    id: 1,
-    name: "SH1–3",
-    emoji: "🏟️",
-    locations: [
-      {
-        id: 1,
-        name: "Geräteraum",
-        items: [
-          { id: 1, name: "Badmintonbälle", count: 12, min: 10 },
-          { id: 2, name: "Springseile", count: 8, min: 5 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "SSp",
-    emoji: "🏀",
-    locations: [
-      {
-        id: 1,
-        name: "Ballwagen",
-        items: [
-          { id: 3, name: "Fußbälle", count: 10, min: 6 },
-          { id: 4, name: "Basketbälle", count: 7, min: 5 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "SR",
-    emoji: "🏃",
-    locations: [
-      {
-        id: 1,
-        name: "Lager",
-        items: [
-          { id: 5, name: "Hürden", count: 9, min: 6 },
-          { id: 6, name: "Stoppuhren", count: 5, min: 3 },
-        ],
-      },
-    ],
-  },
-];
-
-function App() {
-  const [areas, setAreas] = useState<Area[]>(() => {
-    const saved = localStorage.getItem("turnhallen");
-    return saved ? JSON.parse(saved) : initialAreas;
-  });
-
-  const [areaId, setAreaId] = useState<number | null>(null);
-  const [locationId, setLocationId] = useState<number | null>(null);
-
-  const [name, setName] = useState("");
-  const [count, setCount] = useState("");
-  const [min, setMin] = useState("");
-
-  useEffect(() => {
-    localStorage.setItem("turnhallen", JSON.stringify(areas));
-  }, [areas]);
-
-  const area = areas.find((a) => a.id === areaId);
-  const location = area?.locations.find((l) => l.id === locationId);
-
-  const addItem = () => {
-    if (!areaId || !locationId || !name) return;
-
-    const newItem: Item = {
-      id: Date.now(),
-      name,
-      count: Number(count) || 0,
-      min: Number(min) || 0,
-    };
-
-    setAreas((prev) =>
-      prev.map((a) =>
-        a.id !== areaId
-          ? a
-          : {
-              ...a,
-              locations: a.locations.map((l) =>
-                l.id !== locationId
-                  ? l
-                  : { ...l, items: [...l.items, newItem] }
-              ),
-            }
-      )
-    );
-
-    setName("");
-    setCount("");
-    setMin("");
-  };
-
-  const updateCount = (itemId: number, delta: number) => {
-    if (!areaId || !locationId) return;
-
-    setAreas((prev) =>
-      prev.map((a) =>
-        a.id !== areaId
-          ? a
-          : {
-              ...a,
-              locations: a.locations.map((l) =>
-                l.id !== locationId
-                  ? l
-                  : {
-                      ...l,
-                      items: l.items.map((i) =>
-                        i.id === itemId
-                          ? { ...i, count: Math.max(0, i.count + delta) }
-                          : i
-                      ),
-                    }
-              ),
-            }
-      )
-    );
-  };
-
-  return (
-    <div className="app">
-      <h1>🏋️ Turnhallen App</h1>
-
-      {!area && (
-        <div>
-          {areas.map((a) => (
-            <button key={a.id} onClick={() => setAreaId(a.id)}>
-              {a.emoji} {a.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {area && !location && (
-        <div>
-          <button onClick={() => setAreaId(null)}>← zurück</button>
-
-          <h2>{area.name}</h2>
-
-          {area.locations.map((l) => (
-            <button key={l.id} onClick={() => setLocationId(l.id)}>
-              📦 {l.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {area && location && (
-        <div>
-          <button onClick={() => setLocationId(null)}>← zurück</button>
-
-          <h2>{location.name}</h2>
-
-          <div className="list">
-            {location.items.map((item) => (
-              <div key={item.id} className="card">
-                <div>
-                  <strong>{item.name}</strong>
-                  <div>
-                    {item.count < item.min ? "⚠️ niedrig" : "✅ ok"}
-                  </div>
-                </div>
-
-                <div className="counter">
-                  <button onClick={() => updateCount(item.id, -1)}>
-                    -
-                  </button>
-                  <span>{item.count}</span>
-                  <button onClick={() => updateCount(item.id, +1)}>
-                    +
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="form">
-            <input
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              placeholder="Anzahl"
-              value={count}
-              onChange={(e) => setCount(e.target.value)}
-            />
-            <input
-              placeholder="Min"
-              value={min}
-              onChange={(e) => setMin(e.target.value)}
-            />
-            <button onClick={addItem}>Hinzufügen</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+import {useEffect,useMemo,useState} from 'react'; import './App.css';
+type Task={id:number;text:string;done:boolean;date:string};
+const seed:Task[]=[{id:1,text:'Wochenplanung finalisieren',done:false,date:'2026-10-01'},{id:2,text:'Marketing-Ideen sortieren',done:false,date:'2026-10-01'},{id:3,text:'Finanzen aktualisieren',done:false,date:'2026-10-02'},{id:4,text:'Vertragsabstimmung',done:false,date:'2026-10-12'}];
+const key='lulu-hq-v2';
+export default function App(){
+ const [tasks,setTasks]=useState<Task[]>(()=>{try{return JSON.parse(localStorage.getItem(key)||'null')?.tasks||seed}catch{return seed}});
+ const [water,setWater]=useState(()=>{try{return JSON.parse(localStorage.getItem(key)||'null')?.water||1500}catch{return 1500}});
+ const [protein,setProtein]=useState(()=>{try{return JSON.parse(localStorage.getItem(key)||'null')?.protein||80}catch{return 80}});
+ const [month,setMonth]=useState(new Date(2026,9,1)); const [selected,setSelected]=useState('2026-10-01'); const [cmd,setCmd]=useState('');
+ useEffect(()=>localStorage.setItem(key,JSON.stringify({tasks,water,protein})),[tasks,water,protein]);
+ const days=useMemo(()=>{let a:(Date|null)[]=[];let first=new Date(month.getFullYear(),month.getMonth(),1);let off=(first.getDay()+6)%7;for(let i=0;i<off;i++)a.push(null);let n=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();for(let d=1;d<=n;d++)a.push(new Date(month.getFullYear(),month.getMonth(),d));return a},[month]);
+ const iso=(d:Date)=>d.toISOString().slice(0,10); const dayTasks=tasks.filter(t=>t.date===selected);
+ const addTask=()=>{let text=prompt('Neue Aufgabe');if(text)setTasks([...tasks,{id:Date.now(),text,done:false,date:selected}])};
+ const run=()=>{if(!cmd.trim())return;let s=cmd.trim(),m=s.match(/(\d+)\s*(ml)?\s*wasser/i);if(m){setWater(v=>Math.min(2500,v+Number(m[1])))}else if((m=s.match(/(\d+)\s*g(?:ramm)?\s*protein/i))){setProtein(Number(m[1]))}else{setTasks(v=>[...v,{id:Date.now(),text:s.replace(/^lulu[, ]*/i,''),done:false,date:selected}])}setCmd('')};
+ return <div className="app"><header><div><span className="eyebrow">LIFE · WORK · MONEY · ME</span><h1>LULU <i>HQ</i></h1></div><div className="date">Donnerstag · 1. Oktober 2026</div></header>
+ <main>
+  <section className="hero card"><div><span className="eyebrow">COMMAND CENTER</span><h2>Guten Abend, Sonia.</h2><p>Was braucht heute deine Aufmerksamkeit?</p></div><div className="status"><b>{tasks.filter(t=>!t.done).length}</b><span>offen</span><b>{tasks.filter(t=>t.date==='2026-10-01'&&!t.done).length}</b><span>heute</span></div></section>
+  <section className="calendar card"><div className="cardhead"><div><span className="eyebrow">KALENDER</span><h3>{month.toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</h3></div><div><button onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))}>‹</button><button onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))}>›</button></div></div>
+   <div className="week">{['Mo','Di','Mi','Do','Fr','Sa','So'].map(x=><span key={x}>{x}</span>)}</div><div className="grid">{days.map((d,i)=>d?<button key={i} className={'day '+(iso(d)===selected?'sel ':'')+(iso(d)==='2026-10-01'?'today':'')} onClick={()=>setSelected(iso(d))}><span>{d.getDate()}</span>{tasks.some(t=>t.date===iso(d))&&<i/>}</button>:<span key={i}/>)}</div>
+   <div className="agenda"><div className="agendaTitle"><b>{new Date(selected+'T12:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})}</b><button onClick={addTask}>＋ Aufgabe</button></div>{dayTasks.length?dayTasks.map(t=><label key={t.id}><input type="checkbox" checked={t.done} onChange={()=>setTasks(tasks.map(x=>x.id===t.id?{...x,done:!x.done}:x))}/><span className={t.done?'done':''}>{t.text}</span><button className="trash" onClick={()=>setTasks(tasks.filter(x=>x.id!==t.id))}>×</button></label>):<p className="muted">Noch nichts geplant.</p>}</div>
+  </section>
+  <section className="talk card"><span className="eyebrow">TALK TO LULU</span><div className="inputrow"><input value={cmd} onChange={e=>setCmd(e.target.value)} onKeyDown={e=>e.key==='Enter'&&run()} placeholder="z. B. 500 ml Wasser oder Aufgabe eingeben …"/><button onClick={run}>Senden</button></div></section>
+  <section className="tiles"><div className="card metric"><span>WASSER</span><strong>{water/1000} L</strong><div className="bar"><i style={{width:Math.min(100,water/25)+'%'}}/></div><button onClick={()=>setWater(v=>Math.min(2500,v+250))}>+ 250 ml</button></div><div className="card metric"><span>PROTEIN</span><strong>{protein} / 120 g</strong><div className="bar"><i style={{width:Math.min(100,protein/1.2)+'%'}}/></div><button onClick={()=>setProtein(v=>Math.min(120,v+10))}>+ 10 g</button></div><div className="card metric"><span>BEWEGUNG</span><strong>6.240</strong><small>Schritte heute</small></div><div className="card metric"><span>YOGA</span><strong>45 min</strong><small>heute</small></div></section>
+  <section className="card intelligence"><span className="eyebrow">LULU INTELLIGENCE</span><h3>Dein Radar</h3><div className="radar"><div><b>2</b><span>Wiedervorlagen</span></div><div><b>1</b><span>Entscheidung</span></div><div><b>3</b><span>Ideen geparkt</span></div></div></section>
+ </main><nav><button onClick={()=>scrollTo({top:0,behavior:'smooth'})}>Heute</button><button onClick={()=>document.querySelector('.calendar')?.scrollIntoView({behavior:'smooth'})}>Kalender</button><button className="voice" onClick={()=>document.querySelector<HTMLInputElement>('.inputrow input')?.focus()}>＋</button><button onClick={()=>document.querySelector('.tiles')?.scrollIntoView({behavior:'smooth'})}>Body</button><button onClick={()=>document.querySelector('.intelligence')?.scrollIntoView({behavior:'smooth'})}>Radar</button></nav></div>
 }
-
-export default App;
